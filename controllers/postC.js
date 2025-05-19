@@ -11,7 +11,6 @@ const createBlog = async (req, res) => {
       coverImage,
       author: req.user.id, 
     });
-
     const savedBlog = await newBlog.save();
     res.status(201).json(savedBlog);
   } catch (err) {
@@ -51,9 +50,6 @@ const getBlogById = async (req, res) => {
     const blog = await Blog.findById(req.params.id).populate("author", "username email");
 
     if (!blog) return res.status(404).json({ message: "Blog not found" });
-
-    // if ( blog.author._id.toString() !== req.user._id)
-    //   return res.status(403).json({ message: "Not authorized to view this blog" });
 
     res.status(200).json(blog);
   } catch (err) {
