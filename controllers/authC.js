@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 const registerUser = async (req, res) => {
   const { email, password, username } = req.body;
@@ -41,4 +43,61 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, login};
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(200).json({ msg: "If the email exists, a reset link will be sent." });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = Date.now() + 300000; // 5min
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expiry;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: " Art-Share Password Reset",
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>`,
+    });
+
+    res.status(200).json({ msg: "Reset link sent to email." });
+  } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now()},//gt is mongoDB query stans for greater than
+    });
+
+    if (!user) return res.status(400).json({ msg: "Invalid or expired token" });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({ msg: "Password updated successfully!" });
+  } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+}; 
+
+module.exports = { registerUser,login,forgotPassword,resetPassword};
