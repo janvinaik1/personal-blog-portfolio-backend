@@ -2,13 +2,14 @@ const Blog = require("../models/Blog");
 
 const createBlog = async (req, res) => {
   try {
-    const { title, content, tags, coverImage } = req.body;
+    const { title, content, tags, coverImage,readTime} = req.body;
 
     const newBlog = new Blog({
       title,
       content,
       tags,
       coverImage,
+      readTime,
       author: req.user.id, 
     });
     const savedBlog = await newBlog.save();
@@ -51,6 +52,7 @@ const getBlogById = async (req, res) => {
 
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
+
     res.status(200).json(blog);
   } catch (err) {
     res.status(500).json({ message: "Error fetching blog" });
@@ -60,19 +62,19 @@ const getBlogById = async (req, res) => {
 const updateBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-
     if (!blog)
       return res.status(404).json({ message: "Blog not found" });
 
     if (blog.author.toString() !== req.user.id)
       return res.status(403).json({ message: "Not authorized to edit this blog" });
 
-    const { title, content, tags, coverImage } = req.body;
+    const { title, content, tags, coverImage,readTime} = req.body;
 
     blog.title = title ?? blog.title;
     blog.content = content ?? blog.content;
     blog.tags = tags ?? blog.tags;
     blog.coverImage = coverImage ?? blog.coverImage;
+    blog.readTime = readTime ?? blog.readTime;
 
     const updatedBlog = await blog.save();
     res.status(200).json(updatedBlog);

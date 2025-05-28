@@ -83,7 +83,7 @@ const resetPassword = async (req, res) => {
   try {
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now()},//gt is mongoDB query stans for greater than
+      resetPasswordExpires: { $gt: Date.now()},//gt is mongoDB query st ans for greater than
     });
 
     if (!user) return res.status(400).json({ msg: "Invalid or expired token" });

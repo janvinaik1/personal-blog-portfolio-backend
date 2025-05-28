@@ -11,7 +11,6 @@ const getPortfolio = async (req, res) => {
     if (!portfolio) {
       return res.status(404).json({ message: "Portfolio not found" });
     }
-
     res.status(200).json(portfolio);
   } catch (error) {
     res
