@@ -16,6 +16,9 @@ app.use(express.json({ limit: '10mb' })); // Body parser
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/",index);
+app.get("/ok", (req,res)=>{
+    res.send("Okay.")
+})
 app.listen(port,()=>{
     console.log('Server running on port ${PORT}');
 })
