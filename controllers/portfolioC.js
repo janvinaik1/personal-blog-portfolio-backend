@@ -22,7 +22,7 @@ const getPortfolio = async (req, res) => {
 const createPortfolio = async (req, res) => {
   try {
     const { id:userId } = req.params;
-    console.log(req.params);
+    console.log("formData.wantsBlog:", req.body.wantsBlog);
     const existing = await Portfolio.findOne({ user: userId });
     if (existing) {
       return res
@@ -32,6 +32,7 @@ const createPortfolio = async (req, res) => {
 
     const portfolio = new Portfolio({
       ...req.body,
+      showBlogs: req.body.wantsBlog,
       user: userId,
     });
 

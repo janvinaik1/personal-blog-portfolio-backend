@@ -52,6 +52,11 @@ const portfolioSchema = new mongoose.Schema({
   bio: String,
   avatar: String, 
   contactEmail: String,
+  
+  showBlogs: { 
+    type: Boolean, 
+    default: false 
+  },
 
   socialLinks: [socialSchema],
   skills: [skillSchema],
