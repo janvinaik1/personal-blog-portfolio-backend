@@ -4,12 +4,19 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
+
 const registerUser = async (req, res) => {
   const { email, password, username } = req.body;
+  const passwordStrengthRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  if (!passwordStrengthRegex.test(password)) {
+    return res.status(400).json({
+      msg: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
+    });
+  }
   try {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ msg: "User already exists" });
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ email, username, password: hashedPassword });
     await user.save();
@@ -27,7 +34,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
     const token = jwt.sign(
-      { id: user._id,username:user.username },
+      { id: user._id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: "5d" }
     );
@@ -35,7 +42,7 @@ const login = async (req, res) => {
       token,
       user: {
         id: user._id,
-        username: user.username
+        username: user.username,
       },
     });
   } catch (err) {
@@ -47,7 +54,10 @@ const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(200).json({ msg: "If the email exists, a reset link will be sent." });
+    if (!user)
+      return res
+        .status(200)
+        .json({ msg: "If the email exists, a reset link will be sent." });
 
     const token = crypto.randomBytes(32).toString("hex");
     const expiry = Date.now() + 300000; // 5min
@@ -85,7 +95,7 @@ const resetPassword = async (req, res) => {
   try {
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now()},//gt is mongoDB query st ans for greater than
+      resetPasswordExpires: { $gt: Date.now() }, //gt is mongoDB query st ans for greater than
     });
 
     if (!user) return res.status(400).json({ msg: "Invalid or expired token" });
@@ -100,6 +110,6 @@ const resetPassword = async (req, res) => {
   } catch (err) {
     res.status(500).json({ msg: "Server error" });
   }
-}; 
+};
 
-module.exports = { registerUser,login,forgotPassword,resetPassword};
+module.exports = { registerUser, login, forgotPassword, resetPassword };

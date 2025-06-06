@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const rateLimit = require("express-rate-limit");
 
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -28,5 +29,24 @@ const restrictTo =(roles = [])=>(req, res, next)=>{
         next();
     };
   
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 login requests per windowMs
+  message: {
+    msg: "Too many login attempts. Please try again after 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-module.exports = { authenticateJWT,restrictTo, };
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // limit each IP to 10 accounts/hour
+  message: {
+    msg: "Too many accounts created from this IP, please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { authenticateJWT,restrictTo,loginLimiter,registerLimiter };
