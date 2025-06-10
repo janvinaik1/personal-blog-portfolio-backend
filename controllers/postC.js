@@ -2,7 +2,11 @@ const Blog = require("../models/Blog");
 
 const createBlog = async (req, res) => {
   try {
-    const { title, content, tags, coverImage,readTime} = req.body;
+    const { title, content, tags,readTime,coverImageUrl} = req.body;
+    const coverImage = req.file?.secure_url ||req.file?.path||coverImageUrl;
+
+     console.log("req.file:", req.file);
+     console.log("coverImage:", coverImage);
 
     const newBlog = new Blog({
       title,
@@ -62,24 +66,28 @@ const getBlogById = async (req, res) => {
 const updateBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    if (!blog)
-      return res.status(404).json({ message: "Blog not found" });
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     if (blog.author.toString() !== req.user.id)
       return res.status(403).json({ message: "Not authorized to edit this blog" });
 
-    const { title, content, tags, coverImage,readTime} = req.body;
+    const { title, content, tags, readTime, coverImage: coverImageFromBody } = req.body;
+
+    // Use Cloudinary image if new one uploaded
+    const imageUrl =
+      req.file?.secure_url || req.file?.path || coverImageFromBody || blog.coverImage;
 
     blog.title = title ?? blog.title;
     blog.content = content ?? blog.content;
     blog.tags = tags ?? blog.tags;
-    blog.coverImage = coverImage ?? blog.coverImage;
+    blog.coverImage = imageUrl;
     blog.readTime = readTime ?? blog.readTime;
 
     const updatedBlog = await blog.save();
     res.status(200).json(updatedBlog);
   } catch (err) {
-    res.status(500).json({ message: "Error updating blog" });
+    console.error("Update Blog Error:", err);
+    res.status(500).json({ message: "Error updating blog", err });
   }
 };
 

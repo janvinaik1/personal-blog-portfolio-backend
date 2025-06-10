@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const {connectMongoDb} = require("./connection");
+const multer = require('multer');
 const path = require('path');
 const index = require("./routes/index")
 
