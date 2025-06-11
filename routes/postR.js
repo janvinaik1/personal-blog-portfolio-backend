@@ -30,8 +30,10 @@ router.post(
     }
   }
 );
-
+router.post("/:id/comments", Blog.addCommentToBlog);
 router.put("/:id", authenticateJWT, upload.single("image"), Blog.updateBlog);
 router.delete("/:id", authenticateJWT, Blog.deleteBlog);
+router.delete('/:id/comments/:commentId',Blog.deleteCommentFromBlog);
+
 
 module.exports = router;

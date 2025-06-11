@@ -26,7 +26,18 @@ const blogSchema = new mongoose.Schema(
     },
     readTime: {
       type: String,
-    }
+    },
+    viewsCount: {
+      type: Number,
+      default: 0,
+    },
+    comments: [
+      {
+        username: { type: String, required: true,default: "Anonymous" },
+        content: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
