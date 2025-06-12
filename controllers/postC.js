@@ -61,9 +61,11 @@ const getBlogById = async (req, res) => {
     );
 
     if (!blog) return res.status(404).json({ message: "Blog not found" });
-    if (!userId && userId !== blog.author._id.toString()) {
+    if (!userId || userId.toString() !== blog.author._id.toString()) {
       await Blog.findByIdAndUpdate(blogId, { $inc: { viewsCount: 1 } });
     }
+    // console.log("UserId:", userId, "AuthorId:", blog.author._id.toString());
+
     const updatedBlog = await Blog.findById(blogId).populate(
       "author",
       "username email"

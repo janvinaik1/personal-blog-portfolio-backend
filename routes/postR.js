@@ -1,11 +1,11 @@
 const Blog = require("../controllers/postC");
-const { authenticateJWT } = require("../middleware/authM");
+const { authenticateJWT,authenticateIfPresent } = require("../middleware/authM");
 const router = require("express").Router();
 const { upload } = require("../middleware/cloudinary");
 
 router.get("/", Blog.getAllBlogs);
 router.get("/search", Blog.search);
-router.get("/:id", Blog.getBlogById);
+router.get("/:id",authenticateIfPresent, Blog.getBlogById);
 router.post(
   "/create",
   authenticateJWT,
