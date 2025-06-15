@@ -6,22 +6,11 @@ const { upload } = require("../middleware/cloudinary");
 router.post(
   "/create/:id",
   authenticateJWT,
-  upload.fields([
-    { name: "avatar", maxCount: 1 },
-    { name: "image", maxCount: 10 },
-  ]),
+  upload.any(),
   Portfolio.createPortfolio
 );
 router.get("/:id", Portfolio.getPortfolio);
-router.put(
-  "/:id",
-  authenticateJWT,
-  upload.fields([
-    { name: "avatar", maxCount: 1 },
-    { name: "image", maxCount: 10 },
-  ]),
-  Portfolio.updatePortfolio
-);
+router.put("/:id", authenticateJWT, upload.any(), Portfolio.updatePortfolio);
 
 router.delete("/:id", authenticateJWT, Portfolio.deletePortfolio);
 

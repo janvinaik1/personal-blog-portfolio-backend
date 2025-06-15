@@ -48,7 +48,7 @@ const getAllBlogs = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Error fetching blogs", err });
   }
-};
+}; 
 
 const getBlogById = async (req, res) => {
   try {

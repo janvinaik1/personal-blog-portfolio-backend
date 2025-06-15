@@ -22,36 +22,47 @@ const getPortfolio = async (req, res) => {
 const createPortfolio = async (req, res) => {
   try {
     const { id: userId } = req.params;
+
     const existing = await Portfolio.findOne({ user: userId });
     if (existing) {
-      return res
-        .status(400)
-        .json({ message: "Portfolio already exists for this user" });
+      return res.status(400).json({ message: "Portfolio already exists for this user" });
     }
 
+    // Map uploaded files by field name
+    const filesMap = {};
+    req.files.forEach((file) => {
+      filesMap[file.fieldname] = file.path;
+    });
+
+    // Handle avatar
     let avatarUrl = "";
-    if (req.files && req.files.avatar && req.files.avatar[0]) {
-      avatarUrl = req.files.avatar[0].path;
-    } else if (
-      typeof req.body.avatar === "string" &&
-      req.body.avatar.trim() !== ""
-    ) {
+    if (filesMap["avatar"]) {
+      avatarUrl = filesMap["avatar"];
+    } else if (typeof req.body.avatar === "string" && req.body.avatar.trim() !== "") {
       avatarUrl = req.body.avatar;
     }
 
-    const image = req.files?.image || [];
-    const projects = req.body.projects || "[]";
-
-    projects.forEach((project, index) => {
-      if (image[index]) {
-        project.image = image[index].path;
+    // Parse projects
+    let projects = [];
+    if (req.body.projects) {
+      try {
+        const parsedProjects = JSON.parse(req.body.projects);
+        projects = parsedProjects.map((project, index) => {
+          const fieldKey = `projects[${index}][image]`;
+          return {
+            ...project,
+            image: filesMap[fieldKey] || "",
+          };
+        });
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid JSON format in projects field" });
       }
-    });
+    }
 
     const portfolio = new Portfolio({
       ...req.body,
       avatar: avatarUrl,
-      showBlogs: req.body.wantsBlog,
+      wantsBlog: req.body.wantsBlog === "true", // ensure it's boolean
       user: userId,
       projects,
     });
@@ -60,9 +71,7 @@ const createPortfolio = async (req, res) => {
 
     res.status(201).json({ message: "Portfolio created", portfolio });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating portfolio", error: error.message });
+    res.status(500).json({ message: "Error creating portfolio", error: error.message });
   }
 };
 
@@ -71,41 +80,64 @@ const updatePortfolio = async (req, res) => {
   try {
     const { id: userId } = req.params;
 
+    // Map uploaded files by field name
+    const filesMap = {};
+    if (req.files) {
+      req.files.forEach((file) => {
+        filesMap[file.fieldname] = file.path;
+      });
+    }
+
+    // Handle avatar
     let avatarUrl = "";
-    if (req.files && req.files.avatar && req.files.avatar[0]) {
-      avatarUrl = req.files.avatar[0].path;
-    } else if (
-      typeof req.body.avatar === "string" &&
-      req.body.avatar.trim() !== ""
-    ) {
+    if (filesMap["avatar"]) {
+      avatarUrl = filesMap["avatar"];
+    } else if (typeof req.body.avatar === "string" && req.body.avatar.trim() !== "") {
       avatarUrl = req.body.avatar;
     }
 
-    const image = req.files?.image || [];
-
+    // Parse projects
     let projects = [];
-    if (typeof req.body.projects === "string") {
-      try {
-        projects = JSON.parse(req.body.projects);
-      } catch (err) {
-        return res.status(400).json({ message: "Invalid projects JSON format" });
+    if (req.body.projects) {
+      if (typeof req.body.projects === "string") {
+        // If it's a string, parse it as JSON
+        try {
+          const parsedProjects = JSON.parse(req.body.projects);
+          projects = parsedProjects.map((project, index) => {
+            const fieldKey = `projects[${index}][image]`;
+            return {
+              ...project,
+              image: filesMap[fieldKey] || project.image || "", // Keep existing image if no new one
+            };
+          });
+        } catch (e) {
+          return res.status(400).json({ message: "Invalid JSON format in projects field" });
+        }
+      } else if (Array.isArray(req.body.projects)) {
+        // If it's already an array, use it directly
+        projects = req.body.projects.map((project, index) => {
+          const fieldKey = `projects[${index}][image]`;
+          return {
+            ...project,
+            image: filesMap[fieldKey] || project.image || "", // Keep existing image if no new one
+          };
+        });
       }
-    } else {
-      projects = req.body.projects || [];
     }
 
-    // Attach images to each project (if any)
-    projects.forEach((project, index) => {
-      if (image[index]) {
-        project.image = image[index].path;
-      }
-    });
-
     const updateData = {
-      ...req.body,
+      name: req.body.name,
+      title: req.body.title,
+      bio: req.body.bio,
+      contactEmail: req.body.contactEmail,
       avatar: avatarUrl,
-      showBlogs: req.body.wantsBlog,
+      showBlogs: req.body.wantsBlog === "true" || req.body.wantsBlog === true,
       projects,
+      skills: req.body.skills || [],
+      experience: req.body.experience || [],
+      education: req.body.education || [],
+      socialLinks: req.body.socialLinks || [],
+      contact: req.body.contact || {},
     };
 
     const updatedPortfolio = await Portfolio.findOneAndUpdate(
@@ -129,7 +161,6 @@ const updatePortfolio = async (req, res) => {
     });
   }
 };
-
 
 const deletePortfolio = async (req, res) => {
   try {
