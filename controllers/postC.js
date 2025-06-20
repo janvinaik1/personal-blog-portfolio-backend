@@ -64,7 +64,7 @@ const getBlogById = async (req, res) => {
     if (!userId || userId.toString() !== blog.author._id.toString()) {
       await Blog.findByIdAndUpdate(blogId, { $inc: { viewsCount: 1 } });
     }
-    // console.log("UserId:", userId, "AuthorId:", blog.author._id.toString());
+     
 
     const updatedBlog = await Blog.findById(blogId).populate(
       "author",
