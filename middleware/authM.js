@@ -31,7 +31,7 @@ const restrictTo =(roles = [])=>(req, res, next)=>{
   
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login requests per windowMs
+  max: 15, // limit each IP to 5 login requests per windowMs
   message: {
     msg: "Too many login attempts. Please try again after 15 minutes.",
   },
@@ -41,7 +41,7 @@ const loginLimiter = rateLimit({
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // limit each IP to 10 accounts/hour
+  max: 25, // limit each IP to 10 accounts/hour
   message: {
     msg: "Too many accounts created from this IP, please try again later.",
   },
