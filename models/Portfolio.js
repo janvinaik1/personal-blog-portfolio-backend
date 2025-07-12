@@ -7,6 +7,8 @@ const projectSchema = new mongoose.Schema({
   githubLink: String,
   liveDemo: String,
   image: String,
+  features: [String],       
+  architecture: String
 });
 
 const experienceSchema = new mongoose.Schema({

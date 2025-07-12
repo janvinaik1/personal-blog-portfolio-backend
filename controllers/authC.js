@@ -60,7 +60,7 @@ const forgotPassword = async (req, res) => {
         .json({ msg: "If the email exists, a reset link will be sent." });
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expiry = Date.now() + 300000; // 5min
+    const expiry = Date.now() + 360000; // 5min
 
     user.resetPasswordToken = token;
     user.resetPasswordExpires = expiry;
@@ -102,8 +102,8 @@ const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
     await user.save();
 
     res.status(200).json({ msg: "Password updated successfully!" });
